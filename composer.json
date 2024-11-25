@@ -1,0 +1,9 @@
+{
+    "require": {
+        "slim/slim": "3.*",
+        "slim/twig-view": "^2.5",
+        "twbs/bootstrap": "5.3.3",
+        "slim/flash": "^0.4.0",
+        "catfan/medoo": "^2.1"
+    }
+}

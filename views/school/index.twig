@@ -1,0 +1,173 @@
+{% extends "layout/main.html" %}
+
+{% block title %}
+    Dashboard
+{% endblock %}
+
+{% block content %}
+    <div class="container-fluid mt-4">
+        <div class="row">
+
+            <div class="col-md-auto col-lg-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h4>School Management</h4>
+                    </div>
+                    <div class="card-body">
+                        <p>Manage your user data here.</p>
+
+                        <div class="container mt-4">
+                            <h4>Manage User Data</h4>
+
+                            <button id="addDataBtn" class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#dataModal">Tambah Data</button>
+
+                            <!-- Tabel Data -->
+                            <table id="tableSchool" class="display" style="width:100%">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>School Name</th>
+                                        <th>Address</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for school in schools %}
+                                        <tr>
+                                            <td>{{ school.id }}</td>
+                                            <td>{{ school.school_name }}</td>
+                                            <td>{{ school.address }}</td>
+                                            <td>
+                                                <button class="btn btn-warning btn-sm editBtn" data-bs-toggle="modal" data-bs-target="#dataModal" 
+                                                data-id="{{ school.id }}" data-school_name="{{ school.school_name }}" data-address="{{ school.address }}">Edit</button>
+                                                
+                                                <button class="btn btn-danger btn-sm deleteBtn" data-id="{{ school.id }}">Delete</button>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="dataModal" tabindex="-1" aria-labelledby="dataModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="dataModalLabel">Tambah Data Sekolah</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="dataForm">
+                        <div class="mb-3">
+                            <label for="school_name" class="form-label">Nama Sekolah</label>
+                            <input type="text" class="form-control" id="school_name" name="school_name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="address" class="form-label">Alamat</label>
+                            <input type="text" class="form-control" id="address" name="address" required>
+                        </div>
+                        <input type="hidden" id="schoolId">
+                        <button type="submit" class="btn btn-primary" id="submitBtn">Tambah Data</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        $(document).ready(function () {
+            // Initialize DataTable
+            $('#tableSchool').DataTable();
+
+            // Add/Edit Logic
+            $('#dataForm').on('submit', function (e) {
+                e.preventDefault();
+                const schoolId = $('#schoolId').val();
+                const url = schoolId ? `/school/edit/${schoolId}` : '/school/create';
+                const method = schoolId ? 'PUT' : 'POST';
+                const data = {
+                    school_name: $('#school_name').val(),
+                    address: $('#address').val(),
+                };
+
+                $.ajax({
+                    url: url,
+                    method: method,
+                    data: data,
+                    success: function () {
+                        Swal.fire('Success', 'Data berhasil disimpan.', 'success').then(() => {
+                            $('#dataModal').modal('hide');
+                            location.reload();
+                        });
+                    },
+                    error: function () {
+                        Swal.fire('Error', 'Terjadi kesalahan.', 'error');
+                    },
+                });
+            });
+
+            // Set Data for Edit
+            $('.editBtn').on('click', function () {
+                const id = $(this).data('id');
+                const school_name = $(this).data('school_name');
+                const address = $(this).data('address');
+
+                $('#dataModalLabel').text('Edit Data Sekolah');
+                $('#school_name').val(school_name);
+                $('#address').val(address);
+                $('#schoolId').val(id);
+                $('#submitBtn').text('Simpan');
+            });
+
+            // Reset Modal for Add
+            $('#addDataBtn').on('click', function () {
+                $('#dataModalLabel').text('Tambah Data Sekolah');
+                $('#school_name').val('');
+                $('#address').val('');
+                $('#schoolId').val('');
+                $('#submitBtn').text('Tambah Data');
+            });
+
+            //   Logic
+            $(document).on('click', '.deleteBtn', function() {
+                const schoolId = $(this).data('id');
+
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: "This action cannot be undone!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, delete it!',
+                    cancelButtonText: 'Cancel'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: `/delete-school/${schoolId}`,
+                            method: 'POST',
+                            success: function(response) {
+                                if (response.status === 'success') {
+                                    Swal.fire('Deleted!', response.message, 'success').then(() => location.reload());
+                                } else {
+                                    Swal.fire('Error!', response.message, 'error');
+                                }
+                            },
+                            error: function() {
+                                Swal.fire('Error!', 'An error occurred while deleting the school.', 'error');
+                            }
+                        });
+                    }
+                });
+            });
+
+        });
+    </script>
+{% endblock %}

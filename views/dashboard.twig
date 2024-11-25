@@ -1,0 +1,96 @@
+{% extends "layout/main.html" %}
+
+{% block title %}
+    Dashboard
+{% endblock %}
+
+{% block content %}
+    <div class="container-fluid mt-4">
+        <div class="row">
+            
+            <div class="col-md-9 col-lg-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h4>Welcome to Your Dashboard</h4>
+                    </div>
+                    <div class="card-body">
+                        <h5>Hello, {{ user.name }}</h5>
+                        <p>This is the main area of your dashboard. You can view your data and manage settings here.</p>
+                        
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="card text-white bg-primary mb-3">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Total Users</h5>
+                                        <p class="card-text">{{ total_users }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card text-white bg-success mb-3">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Total Schools</h5>
+                                        <p class="card-text">{{ total_schools }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card text-white bg-warning mb-3">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Total Students</h5>
+                                        <p class="card-text">{{ total_students }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card mt-4">
+                            <div class="card-header">
+                                <h5>Students per School</h5>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="studentsPerSchoolChart" width="400" height="200"></canvas>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        var studentsPerSchoolData = {{ students_per_school | json_encode | raw }};
+        
+        var labels = studentsPerSchoolData.map(function(item) {
+            return item.school_name;
+        });
+        
+        var data = studentsPerSchoolData.map(function(item) {
+            return item.student_count;
+        });
+        
+        var ctx = document.getElementById('studentsPerSchoolChart').getContext('2d');
+        var studentsPerSchoolChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Number of Students',
+                    data: data,
+                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    </script>
+
+{% endblock %}
